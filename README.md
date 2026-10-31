@@ -21,10 +21,11 @@ If you want to use the beeper, <a href="https://quantdrent.github.io/Rien-Prescr
 
 ## Hardware Versions & Required Materials
 
-> There are three different hardware setups in this project:
+> There are four different hardware setups in this project:
 > * **The nRF52840 (Recommended Build).** It has a TFT color screen, custom fonts, and deep sleep mode. This is the recommended version you see in the GIF.
 > * **The ESP32-C3 (Alternative Build).** This uses the exact same TFT color screen as the recommended build, but runs on a much cheaper ESP32-C3 SuperMini. It lacks deep sleep but is a great budget alternative.
 > * **The ESP32-C3 (Legacy OLED Build).** An older, archived build that uses a basic blue 1.3" OLED screen. You can find its firmware in `firmware/ESP32/PrescriptBeeper_Legacy_OLED`.
+> * **The LilyGO T-Display-S3 (One-Button Build).** A ready-made ESP32-S3 board with a 1.9" 170x320 TFT screen on the PCB. It uses one TTP223 touch button and one active buzzer. Build it with Nix and arduino-cli. Firmware is in `firmware/T-Display-S3`.
 > 
 > **DO NOT mix the parts (if you dont know what youre doing).** The firmwares and 3D printed cases are **NOT** interchangeable between the different screens and boards. Make sure you pick the right firmware and 3D model for your parts.
 
@@ -164,6 +165,83 @@ This is the archived legacy version using a monochrome OLED. You can find its fi
 </p>
 
 *(Note: The slide switch does not connect to a GPIO pin; wire it inline with the OUT+ of the charging module to act as a physical power switch, as shown in the diagram).*
+</details>
+
+<details>
+<summary><strong>One-Button Build (LilyGO T-Display-S3)</strong></summary>
+
+This build uses the LilyGO T-Display-S3. The board has the ESP32-S3, 16 MB flash, 8 MB PSRAM, a 1.9 inch 170x320 ST7789 TFT and two push buttons on the PCB. You add one TTP223 touch button and one active buzzer. No screen wiring is necessary.
+
+> **Note:** The screen on this board uses an 8-bit parallel bus, not SPI. The firmware uses the Arduino_GFX library for it. Do not use the `firmware/ESP32` sketch on this board.
+
+**Required Parts:**
+- LilyGO T-Display-S3 (non-touch version) [[LilyGO repo](https://github.com/Xinyuan-LilyGO/T-Display-S3)]
+- 1x Touch capacitive switch TTP223
+- 1x Active buzzer (2-pin part, or 3-pin module)
+- Wires
+- (optional) 3.7V LiPo battery with a 1.25 mm JST plug for the battery connector on the board
+
+**Wiring Table:**
+| T-Display-S3 Pin | Component Pin |
+| :--- | :--- |
+| **`GPIO 16`** | TTP223 `I/O` |
+| **`GPIO 10`** | Buzzer `+` (2-pin part) or buzzer module `I/O` |
+| **`3V3`** | TTP223 `VCC`, buzzer module `VCC` |
+| **`GND`** | TTP223 `GND`, buzzer `-` or buzzer module `GND` |
+
+*(Notes: The TTP223 module gives a HIGH output while you touch it. This is the factory setting with the A and B solder pads open. If you close pad B, the output is LOW while you touch it. Then set `TOUCH_ACTIVE_LEVEL` to `LOW` in `config.h`. A GPIO pin can drive a small active buzzer that uses 20 mA or less. If your buzzer uses more current, drive it through an NPN transistor. If your buzzer module turns on when the pin is LOW, set `BUZZER_ACTIVE_LEVEL` to `LOW`.)*
+
+**Preloaded Prescripts:**
+The firmware carries the prescripts from `prescriptexamples/RienPrescripts.txt`. On the first boot, and after a factory reset, it writes them to the device storage. After that the web app owns the list: add, remove, import and export work as on the other builds. A prescript can have up to about 240 characters. Longer lines are cut when the device reads them back. To ship a different default set, run `firmware/T-Display-S3/gen_default_prescripts.sh yourfile.txt > firmware/T-Display-S3/PrescriptBeeper/default_prescripts.h` and rebuild.
+
+**Auto Missions:**
+The device pulls a prescript on its own at a random time between 10 and 30 minutes after the last one. If a prescript is on screen at that moment, it waits one more minute. Change `AUTO_MISSION_MIN_MINUTES` and `AUTO_MISSION_MAX_MINUTES` in `config.h`. Set the maximum to 0 to turn the feature off.
+
+**Screen Insets:**
+If the case hides the edge of the screen, set `SCREEN_INSET_TOP`, `SCREEN_INSET_BOTTOM`, `SCREEN_INSET_LEFT` and `SCREEN_INSET_RIGHT` in `config.h`. The values are in pixels. The firmware keeps that area black and lays out the text in the area that is visible.
+
+**Controls:**
+| Input | When idle | When a prescript waits for a response |
+| :--- | :--- | :--- |
+| Touch button, tap | Show a random prescript | **Pass** |
+| Touch button, hold 0.7 s | Nothing | **Fail** |
+| `KEY` button on the PCB (GPIO 14) | Nothing | **Fail** |
+| `BOOT` button on the PCB (GPIO 0) | Cycle the volume: high, mid, low, mute | Cycle the volume, with a confirmation beep |
+
+**Buzzer Sounds:**
+- New prescript: one click for each character as the text resolves, then four short beeps and one long beep when the message is complete. This echoes the sound of the web app.
+- Pass: one short beep.
+- Fail or timeout: one long beep.
+- Last three seconds of a timer: one tick each second.
+- Connected: two short beeps. Disconnected: one medium beep.
+- The `BOOT` button cycles the volume: high, mid, low, mute. The default is mid. The screen shows the new level when idle. The setting stays after a power cycle.
+- The buzzer is an active type. Full volume drives it with a steady level. The lower levels chop the drive at 1 kHz with a smaller duty cycle, which this buzzer renders as three clearly different loudness steps. A 20 kHz chop does not work with it.
+
+**Serial Debug Commands:**
+Connect to the USB serial port at 115200 baud and send one command per line. `HELP` lists them. Useful ones: `SHOW text` shows a text with sounds and counts as a prescript in the stats, `BEEP on,off,on,off,...` plays a custom pattern in milliseconds, `CLICK ms` sets the click length, `TERM on,off,...` sets the termination pattern, `MUTE 0|1`, `BAT` prints the voltage on the battery pin. Open the port in raw mode, for example with pyserial or `pio device monitor`. A plain `cat` on the port echoes the device output back to it. With USB attached, `BAT` reads the charger rail at about 4.8 V, not the cell.
+
+**Toolchain (Nix):**
+The repository has a `flake.nix` built on [arduino-nix](https://github.com/bouk/arduino-nix). Nix fetches `arduino-cli`, the esp32 core 3.3.12 with its compilers, and the `GFX Library for Arduino` 1.6.9 into the Nix store. The versions are pinned in `flake.nix` and `flake.lock`. The first build downloads about 1.5 GB.
+
+```sh
+nix develop
+beeper-build            # compile the sketch in firmware/T-Display-S3/PrescriptBeeper
+beeper-flash            # flash over USB-C, default port /dev/ttyACM0
+beeper-monitor          # serial log at 115200 baud
+```
+
+The scripts call `arduino-cli` with the board `esp32:esp32:lilygo_t_display_s3`. You can also run `arduino-cli` directly inside the shell.
+
+> **Note:** The Espressif compilers are prebuilt binaries. On NixOS they run through `nix-ld`, so enable `programs.nix-ld` in your system configuration. Your user must also be in the `dialout` group to open the serial port.
+
+If the upload fails, hold `BOOT`, press `RST`, release `BOOT`, and upload again.
+
+**Arduino IDE:** The sketch folder also opens in the Arduino IDE 2.x. Install the esp32 core 3.x and the `GFX Library for Arduino`. Select the board **ESP32S3 Dev Module** with Flash Size 16MB, PSRAM **OPI PSRAM**, USB CDC On Boot **Enabled** and Partition Scheme **16M Flash (3MB APP/9.9MB FATFS)** or any 16 MB scheme. The `partitions.csv` file in the sketch folder replaces the selected scheme and gives LittleFS its partition. The board entry **LilyGo T-Display-S3** also works, but it does not enable PSRAM. The Nix build script passes `-DBOARD_HAS_PSRAM` for that reason.
+
+**3D Printing (Case):**
+There is no case model for this build yet. LilyGO sells a shell for the board.
+
+**Sources:** Pin numbers come from `examples/factory/pin_config.h` and the Arduino_GFX example in the [LilyGO T-Display-S3 repository](https://github.com/Xinyuan-LilyGO/T-Display-S3). TTP223 behaviour comes from the [TTP223 datasheet](https://www.sunrom.com/get/396500).
 </details>
 
 ## Quickstart
