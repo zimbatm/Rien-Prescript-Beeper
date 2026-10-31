@@ -1,8 +1,9 @@
 # dur|respond|prescript
 # respond: 1=requires button press, 0=info only
-10 | 1 | Dye your hair white.
-15 | 0 | You must go by rien.
-10 | 0 | Larp as the black silence
+10 | 1 | Find Dante and eliminate him.
+15 | 1 | Help Sora with her training
+10 | 1 | Fight against the other syndicates
+10 | 1 | Kill Mathias and Kira
 - | 1 | Infiltrate limbus company.
 300 | 1 | Speak only in third person for 5 minutes.
 - | 0 | End every sentence with "...as the Prescript wills it." if neccesarry.

@@ -3,9 +3,10 @@
 
 // Generated from RienPrescripts.txt by gen_default_prescripts.sh. Do not edit by hand.
 static const char DEFAULT_PRESCRIPTS[] PROGMEM =
-  "10 | 1 | Dye your hair white.\n"
-  "15 | 0 | You must go by rien.\n"
-  "10 | 0 | Larp as the black silence\n"
+  "10 | 1 | Find Dante and eliminate him.\n"
+  "15 | 1 | Help Sora with her training\n"
+  "10 | 1 | Fight against the other syndicates\n"
+  "10 | 1 | Kill Mathias and Kira\n"
   "- | 1 | Infiltrate limbus company.\n"
   "300 | 1 | Speak only in third person for 5 minutes.\n"
   "- | 0 | End every sentence with \"...as the Prescript wills it.\" if neccesarry.\n"

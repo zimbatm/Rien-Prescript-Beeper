@@ -89,6 +89,9 @@ void handleSerialCommand(String line) {
     if (v > 255) v = 255;
     setBuzzerVolume((uint8_t)v);
     Serial.println(String("OK VOL ") + buzzerLevelName() + " (" + String(v) + ")");
+  } else if (line == "SEED") {
+    writeDefaultPrescripts();
+    Serial.println("OK SEED " + String(countStoredPrescripts()) + " prescripts");
   } else if (line == "BAT") {
     uint32_t mv = analogReadMilliVolts(PIN_BAT_VOLT) * 2;
     Serial.println("OK BAT " + String(mv) + " mV");
@@ -96,7 +99,7 @@ void handleSerialCommand(String line) {
     buzzerStop();
     Serial.println("OK STOP");
   } else if (line == "HELP") {
-    Serial.println("SHOW text | BEEP on,off,... | PAT pass|fail|connected|disconnected|tick|term | CLICK ms | SCR 0|1|on,off | TERM on,off,... | MUTE 0|1 | NEXT | AUTO [minutes] | VOL 0-255 | BAT | STOP");
+    Serial.println("SHOW text | BEEP on,off,... | PAT pass|fail|connected|disconnected|tick|term | CLICK ms | SCR 0|1|on,off | TERM on,off,... | MUTE 0|1 | NEXT | AUTO [minutes] | VOL 0-255 | SEED | BAT | STOP");
   } else {
     Serial.println("ERR unknown command, try HELP");
   }

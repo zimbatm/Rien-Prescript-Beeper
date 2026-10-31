@@ -363,17 +363,18 @@ bool parsePrescriptLine(const String& line, int& outDuration, bool& outRespond, 
 }
 
 
+void writeDefaultPrescripts() {
+  File f = LittleFS.open(CUSTOMS_FILE, "w");
+  if (!f) return;
+  f.print(DEFAULT_PRESCRIPTS);
+  f.close();
+  invalidatePrescriptCache();
+  Serial.println("Seeded default prescripts");
+}
+
 void seedDefaultPrescripts() {
   if (LittleFS.exists(SEEDED_FILE)) return;
-  if (!LittleFS.exists(CUSTOMS_FILE)) {
-    File f = LittleFS.open(CUSTOMS_FILE, "w");
-    if (f) {
-      f.print(DEFAULT_PRESCRIPTS);
-      f.close();
-      invalidatePrescriptCache();
-      Serial.println("Seeded default prescripts");
-    }
-  }
+  if (!LittleFS.exists(CUSTOMS_FILE)) writeDefaultPrescripts();
   File flag = LittleFS.open(SEEDED_FILE, "w");
   if (flag) {
     flag.println("1");
