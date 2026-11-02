@@ -6,8 +6,6 @@
 
 void showPrescriptOnDisplay(const char* text, unsigned long durationMs, bool infinite, bool respond);
 void drawNewPrescript();
-void armAutoMission(unsigned long minutesMin, unsigned long minutesMax);
-extern unsigned long nextAutoMissionAt;
 extern String currentDisplayText;
 
 static String serialLine = "";
@@ -76,22 +74,6 @@ void handleSerialCommand(String line) {
   } else if (line == "NEXT") {
     drawNewPrescript();
     Serial.println("OK NEXT " + currentDisplayText);
-  } else if (line.startsWith("AUTO ")) {
-    unsigned long m = line.substring(5).toInt();
-    armAutoMission(m, m);
-    Serial.println("OK AUTO " + String(m) + " min");
-  } else if (line == "AUTO") {
-    long remain = nextAutoMissionAt == 0 ? -1 : (long)(nextAutoMissionAt - millis()) / 1000;
-    Serial.println("OK AUTO in " + String(remain) + " s");
-  } else if (line.startsWith("VOL ")) {
-    int v = line.substring(4).toInt();
-    if (v < 0) v = 0;
-    if (v > 255) v = 255;
-    setBuzzerVolume((uint8_t)v);
-    Serial.println(String("OK VOL ") + buzzerLevelName() + " (" + String(v) + ")");
-  } else if (line == "SEED") {
-    writeDefaultPrescripts();
-    Serial.println("OK SEED " + String(countStoredPrescripts()) + " prescripts");
   } else if (line == "BAT") {
     uint32_t mv = analogReadMilliVolts(PIN_BAT_VOLT) * 2;
     Serial.println("OK BAT " + String(mv) + " mV");
@@ -99,7 +81,7 @@ void handleSerialCommand(String line) {
     buzzerStop();
     Serial.println("OK STOP");
   } else if (line == "HELP") {
-    Serial.println("SHOW text | BEEP on,off,... | PAT pass|fail|connected|disconnected|tick|term | CLICK ms | SCR 0|1|on,off | TERM on,off,... | MUTE 0|1 | NEXT | AUTO [minutes] | VOL 0-255 | SEED | BAT | STOP");
+    Serial.println("SHOW text | BEEP on,off,... | PAT pass|fail|connected|disconnected|tick|term | CLICK ms | SCR 0|1|on,off | TERM on,off,... | MUTE 0|1 | NEXT | VOL 0-255 | SEED | BAT | STOP");
   } else {
     Serial.println("ERR unknown command, try HELP");
   }

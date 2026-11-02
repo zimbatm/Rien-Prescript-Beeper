@@ -194,9 +194,6 @@ This build uses the LilyGO T-Display-S3. The board has the ESP32-S3, 16 MB flash
 **Preloaded Prescripts:**
 The firmware carries the prescripts from `prescriptexamples/RienPrescripts.txt`. On the first boot, and after a factory reset, it writes them to the device storage. After that the web app owns the list: add, remove, import and export work as on the other builds. A prescript can have up to about 240 characters. Longer lines are cut when the device reads them back. To ship a different default set, run `firmware/T-Display-S3/gen_default_prescripts.sh yourfile.txt > firmware/T-Display-S3/PrescriptBeeper/default_prescripts.h` and rebuild.
 
-**Auto Missions:**
-The device pulls a prescript on its own at a random time between 10 and 30 minutes after the last one. If a prescript is on screen at that moment, it waits one more minute. Change `AUTO_MISSION_MIN_MINUTES` and `AUTO_MISSION_MAX_MINUTES` in `config.h`. Set the maximum to 0 to turn the feature off.
-
 **Screen Insets:**
 If the case hides the edge of the screen, set `SCREEN_INSET_TOP`, `SCREEN_INSET_BOTTOM`, `SCREEN_INSET_LEFT` and `SCREEN_INSET_RIGHT` in `config.h`. The values are in pixels. The firmware keeps that area black and lays out the text in the area that is visible.
 

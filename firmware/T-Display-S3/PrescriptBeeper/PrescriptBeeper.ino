@@ -25,29 +25,6 @@ Button touchBtn;
 Button keyBtn;
 Button bootBtn;
 
-unsigned long nextAutoMissionAt = 0;
-void drawNewPrescript();
-
-void armAutoMission(unsigned long minutesMin, unsigned long minutesMax) {
-  if (minutesMax == 0) {
-    nextAutoMissionAt = 0;
-    return;
-  }
-  unsigned long minutes = random(minutesMin, minutesMax + 1);
-  nextAutoMissionAt = millis() + minutes * 60000UL;
-  if (nextAutoMissionAt == 0) nextAutoMissionAt = 1;
-}
-
-void handleAutoMission() {
-  if (nextAutoMissionAt == 0) return;
-  if ((long)(millis() - nextAutoMissionAt) < 0) return;
-  if (isDisplaying) {
-    nextAutoMissionAt = millis() + 60000UL;
-    return;
-  }
-  drawNewPrescript();
-}
-
 void showPrescriptOnDisplay(const char* text, unsigned long durationMs, bool infinite, bool respond) {
   currentDisplayText = String(text);
   isDisplaying = true;
@@ -60,7 +37,6 @@ void showPrescriptOnDisplay(const char* text, unsigned long durationMs, bool inf
   if (!isSystemText(text)) {
     addStats("0,0,1");
     textSoundsActive = true;
-    armAutoMission(AUTO_MISSION_MIN_MINUTES, AUTO_MISSION_MAX_MINUTES);
   } else if (currentDisplayText == "CLEAR." || currentDisplayText.startsWith("Volume")) {
     beepPass();
   } else if (currentDisplayText == "FAILED.") {
@@ -214,7 +190,6 @@ void setup() {
   startAdv();
 
   randomSeed(esp_random());
-  armAutoMission(AUTO_MISSION_MIN_MINUTES, AUTO_MISSION_MAX_MINUTES);
 
   buttonInit(touchBtn, PIN_TOUCH, TOUCH_ACTIVE_LEVEL, TOUCH_ACTIVE_LEVEL == HIGH ? INPUT_PULLDOWN : INPUT_PULLUP);
   buttonInit(keyBtn, PIN_KEY, LOW, INPUT_PULLUP);
@@ -230,7 +205,6 @@ void loop() {
   handleDisplayTimer();
   handleBuzzer();
   handleSerial();
-  handleAutoMission();
 
   if (pendingDisplayUpdate) {
     pendingDisplayUpdate = false;

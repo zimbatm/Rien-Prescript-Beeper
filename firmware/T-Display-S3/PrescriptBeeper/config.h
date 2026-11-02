@@ -58,8 +58,6 @@ extern bool timerFormatLong;
 #define MAX_LINES  8
 #define WORD_BUF   64
 
-#define AUTO_MISSION_MIN_MINUTES 10
-#define AUTO_MISSION_MAX_MINUTES 30
 
 #define BLE_CHUNK_SIZE      20
 #define BLE_CHUNK_DELAY_MS  10
