@@ -35,7 +35,9 @@ void displayInit() {
   digitalWrite(PIN_LCD_BL, LOW);
 
   if (!spr.begin()) {
-    Serial.println("Display init failed");
+    Serial.println("Display init failed, restarting");
+    delay(1000);
+    ESP.restart();
   }
   panel->fillScreen(COLOR_BG);
   spr.fillScreen(COLOR_BG);
